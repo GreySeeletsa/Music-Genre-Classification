@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0612" />
+  <title>AudioInsight - AI Music Genre Classification</title>
+  <meta name="description" content="Upload your audio and let AI classify the genre instantly. Powered by machine learning for accurate music genre prediction." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ==============================================================
+       AudioInsight — Full CSS (inlined)
+       ============================================================== */
+
+    :root {
+      --bg: #0a0612;
+      --fg: #ede9f6;
+      --card-bg: rgba(22, 14, 42, 0.40);
+      --card-border: rgba(80, 56, 130, 0.20);
+      --primary: #d946a8;
+      --primary-light: rgba(217, 70, 168, 0.15);
+      --primary-glow: rgba(217, 70, 168, 0.25);
+      --accent: #22c7b0;
+      --accent-light: rgba(34, 199, 176, 0.15);
+      --muted: #6e5f8a;
+      --muted-light: #8a7da0;
+      --secondary: #1a1128;
+      --border: rgba(80, 56, 130, 0.35);
+      --destructive: #ef4444;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'Space Grotesk', monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* --- Animated Background --- */
+    .bg-layer { position: fixed; inset: 0; z-index: -1; overflow: hidden; }
+    .bg-orb { position: absolute; border-radius: 50%; animation: pulse-glow 4s ease-in-out infinite; }
+    .bg-orb--primary {
+      top: -120px; right: -120px; width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(217,70,168,0.14) 0%, transparent 70%);
+    }
+    .bg-orb--accent {
+      bottom: -180px; left: -180px; width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(34,199,176,0.09) 0%, transparent 70%);
+      animation-delay: 1.5s;
+    }
+    .bg-orb--center {
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(100,60,180,0.07) 0%, transparent 70%);
+      animation-delay: 0.8s;
+    }
+    .bg-grid {
+      position: absolute; inset: 0; opacity: 0.03;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px);
+      background-size: 64px 64px;
+    }
+
+    /* --- Glassmorphism --- */
+    .glass {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border); border-radius: 1rem;
+    }
+    .glass-strong {
+      background: rgba(18, 10, 36, 0.65);
+      backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+      border: 1px solid rgba(100, 70, 160, 0.15);
+    }
+
+    /* --- Keyframes --- */
+    @keyframes fade-in-up {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fade-in {
+      from { opacity: 0; } to { opacity: 1; }
+    }
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 0.4; } 50% { opacity: 0.85; }
+    }
+    @keyframes spin-slow {
+      from { transform: rotate(0deg); } to { transform: rotate(360deg); }
+    }
+    @keyframes spin-disc {
+      from { transform: rotate(0deg); } to { transform: rotate(360deg); }
+    }
+    @keyframes loading-bar {
+      0%   { transform: translateX(-100%); }
+      50%  { transform: translateX(250%); }
+      100% { transform: translateX(-100%); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; } 50% { opacity: 0.5; }
+    }
+
+    /* --- Animation Utilities --- */
+    .anim-fiu { opacity: 0; animation: fade-in-up 0.7s ease-out forwards; }
+    .anim-fi  { opacity: 0; animation: fade-in 0.5s ease-out forwards; }
+    .d100 { animation-delay: 100ms; }
+    .d200 { animation-delay: 200ms; }
+    .d300 { animation-delay: 300ms; }
+    .d400 { animation-delay: 400ms; }
+    .d500 { animation-delay: 500ms; }
+    .d600 { animation-delay: 600ms; }
+    .d700 { animation-delay: 700ms; }
+
+    /* --- Header --- */
+    .header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+      animation: fade-in 0.5s ease-out forwards;
+    }
+    .header__inner {
+      max-width: 100%; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 1.5rem;
+    }
+    .header__brand { display: flex; align-items: center; gap: 0.75rem; }
+    .header__disc {
+      width: 28px; height: 28px; color: var(--primary);
+      animation: spin-slow 20s linear infinite;
+    }
+    .header__name {
+      font-family: var(--font-mono); font-size: 1.125rem;
+      font-weight: 700; letter-spacing: -0.025em;
+    }
+    .header__nav { display: none; align-items: center; gap: 1.5rem; }
+    @media (min-width: 640px) { .header__nav { display: flex; } }
+    .header__nav-link {
+      font-size: 0.875rem; color: var(--muted); cursor: default; transition: color 0.2s;
+    }
+    .header__nav-link:hover { color: var(--fg); }
+    .header__status { display: flex; align-items: center; gap: 0.5rem; }
+    .header__dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--accent); animation: pulse 2s ease-in-out infinite;
+    }
+    .header__status-text { font-size: 0.75rem; font-weight: 500; color: var(--accent); }
+
+    /* --- Main --- */
+    .main {
+      position: relative; max-width: 672px; margin: 0 auto;
+      display: flex; flex-direction: column;
+      min-height: 100vh; padding: 7rem 1.5rem 4rem;
+    }
+
+    /* --- Hero --- */
+    .hero { margin-bottom: 2.5rem; text-align: center; }
+    .hero__badge {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.375rem 1rem; border-radius: 9999px;
+      border: 1px solid var(--border);
+      font-size: 0.75rem; font-weight: 500; color: var(--muted);
+      margin-bottom: 1rem;
+    }
+    .hero__badge-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--primary); animation: pulse 2s ease-in-out infinite;
+    }
+    .hero__title {
+      font-family: var(--font-mono);
+      font-size: clamp(2rem, 5vw, 3rem); font-weight: 700;
+      letter-spacing: -0.025em; line-height: 1.15;
+    }
+    .hero__title-accent { display: block; color: var(--primary); }
+    .hero__desc {
+      max-width: 28rem; margin: 1rem auto 0;
+      font-size: 1rem; line-height: 1.6; color: var(--muted-light);
+    }
+
+    /* --- Waveform --- */
+    .waveform {
+      display: flex; align-items: flex-end; justify-content: center;
+      gap: 2px; height: 64px; margin-bottom: 2rem;
+    }
+    .waveform__bar {
+      width: 3px; border-radius: 9999px;
+      transition: height 0.15s ease-out, opacity 0.15s ease-out;
+      background: linear-gradient(to top, var(--primary), var(--accent));
+      opacity: 0.3;
+    }
+    .waveform--active .waveform__bar { opacity: 0.9; }
+
+    /* --- Upload Zone --- */
+    .upload-zone {
+      position: relative; width: 100%; cursor: pointer;
+      border: 2px dashed var(--border); border-radius: 1rem;
+      padding: 2.5rem; transition: all 0.3s ease-out;
+      background: transparent; color: inherit; font: inherit; text-align: left;
+    }
+    .upload-zone:hover {
+      border-color: rgba(217,70,168,0.5);
+      background: rgba(217,70,168,0.02);
+    }
+    .upload-zone--dragging {
+      border-color: var(--primary) !important;
+      background: rgba(217,70,168,0.05) !important;
+      transform: scale(1.02);
+    }
+    .upload-zone__content {
+      display: flex; flex-direction: column; align-items: center; gap: 1rem;
+    }
+    .upload-zone__icon-wrap {
+      padding: 1rem; border-radius: 50%;
+      background: var(--secondary); color: var(--muted);
+      transition: all 0.3s;
+    }
+    .upload-zone:hover .upload-zone__icon-wrap {
+      background: var(--primary-light); color: var(--primary);
+      transform: scale(1.1);
+    }
+    .upload-zone__icon { width: 32px; height: 32px; }
+    .upload-zone__text { font-size: 1.125rem; font-weight: 500; }
+    .upload-zone__subtext { margin-top: 0.25rem; font-size: 0.875rem; color: var(--muted); }
+
+    /* --- File Info Card --- */
+    .file-info { display: flex; align-items: center; gap: 1rem; padding: 1.25rem; }
+    .file-info__icon-wrap {
+      flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      width: 48px; height: 48px; border-radius: 0.75rem;
+      background: var(--primary-light); color: var(--primary);
+    }
+    .file-info__icon { width: 24px; height: 24px; }
+    .file-info__details { min-width: 0; flex: 1; }
+    .file-info__name {
+      font-size: 0.875rem; font-weight: 500;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .file-info__size { font-size: 0.75rem; color: var(--muted); }
+    .file-info__remove {
+      flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px; border-radius: 50%; border: none;
+      background: transparent; color: var(--muted); cursor: pointer;
+      transition: all 0.2s;
+    }
+    .file-info__remove:hover { background: rgba(239,68,68,0.15); color: var(--destructive); }
+    .file-info__remove svg { width: 16px; height: 16px; }
+
+    /* --- Buttons --- */
+    .action-wrap { display: flex; justify-content: center; margin-top: 1.5rem; }
+    .btn {
+      position: relative; display: inline-flex; align-items: center; gap: 0.625rem;
+      overflow: hidden; border-radius: 9999px; padding: 0.875rem 2rem;
+      font-size: 0.875rem; font-weight: 600; font-family: var(--font-sans);
+      border: none; cursor: pointer; transition: all 0.3s ease-out;
+    }
+    .btn--primary {
+      background: var(--primary); color: #fff;
+      box-shadow: 0 8px 24px var(--primary-glow);
+    }
+    .btn--primary:hover:not(:disabled) {
+      box-shadow: 0 12px 32px rgba(217,70,168,0.35); transform: scale(1.03);
+    }
+    .btn--primary:active:not(:disabled) { transform: scale(0.98); }
+    .btn--primary:disabled {
+      background: var(--secondary); color: var(--muted);
+      box-shadow: none; cursor: not-allowed;
+    }
+    .btn--secondary {
+      background: rgba(26,17,40,0.5); color: var(--fg);
+      border: 1px solid var(--border);
+    }
+    .btn--secondary:hover { background: var(--secondary); transform: scale(1.03); }
+    .btn--secondary:active { transform: scale(0.98); }
+    .btn__shine {
+      position: absolute; inset: 0; transform: translateX(-100%);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.10), transparent);
+      transition: transform 0.7s; pointer-events: none;
+    }
+    .btn--primary:hover:not(:disabled) .btn__shine { transform: translateX(100%); }
+    .btn__icon { width: 16px; height: 16px; transition: transform 0.3s; }
+    .btn--primary:hover:not(:disabled) .btn__icon--arrow { transform: translateX(2px); }
+    .btn--secondary:hover .btn__icon--rotate { transform: rotate(-90deg); }
+
+    /* --- Error --- */
+    .error-msg {
+      margin-top: 1rem; padding: 0.75rem 1rem;
+      border-radius: 0.75rem; border: 1px solid rgba(239,68,68,0.3);
+      background: rgba(239,68,68,0.1); text-align: center;
+      font-size: 0.875rem; color: var(--destructive);
+      animation: fade-in 0.4s ease-out forwards;
+    }
+
+    /* --- Genre Result --- */
+    .result { margin-top: 2rem; }
+    .result__inner { padding: 2rem; text-align: center; }
+    .result__loading { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+    .result__disc-wrap { position: relative; }
+    .result__disc {
+      width: 64px; height: 64px; color: var(--primary);
+      animation: spin-disc 2s linear infinite;
+    }
+    .result__disc-dot { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+    .result__disc-dot span {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: var(--primary); animation: pulse 1.5s ease-in-out infinite;
+    }
+    .result__loading-title { font-size: 1.125rem; font-weight: 500; }
+    .result__loading-sub { margin-top: 0.25rem; font-size: 0.875rem; color: var(--muted); }
+    .result__bar-track {
+      width: 100%; max-width: 240px; height: 6px;
+      border-radius: 9999px; background: var(--secondary); overflow: hidden;
+    }
+    .result__bar-fill {
+      width: 40%; height: 100%; border-radius: 9999px;
+      background: var(--primary); animation: loading-bar 2s ease-in-out infinite;
+    }
+    .result__success {
+      display: flex; flex-direction: column; align-items: center; gap: 1.25rem;
+      animation: fade-in 0.5s ease-out forwards;
+    }
+    .result__genre-icon-wrap {
+      display: flex; align-items: center; justify-content: center;
+      width: 80px; height: 80px; border-radius: 1rem;
+    }
+    .result__genre-icon { width: 40px; height: 40px; }
+    .result__label {
+      font-size: 0.75rem; font-weight: 500;
+      text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted);
+    }
+    .result__genre-name {
+      margin-top: 0.5rem; font-family: var(--font-mono);
+      font-size: 2.25rem; font-weight: 700; letter-spacing: -0.025em;
+    }
+    .result__tag {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.5rem 1rem; border-radius: 9999px;
+      font-size: 0.875rem; font-weight: 500;
+    }
+    .result__tag-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    /* --- Feature Cards --- */
+    .features {
+      margin-top: 3rem; display: grid;
+      grid-template-columns: repeat(2, 1fr); gap: 0.75rem;
+    }
+    @media (min-width: 640px) {
+      .features { grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+    }
+    .feature-card { padding: 1rem; border-radius: 0.75rem; transition: all 0.3s; }
+    .feature-card:hover { transform: scale(1.03); background: rgba(217,70,168,0.04); }
+    .feature-card__content {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 0.5rem; text-align: center;
+    }
+    @media (min-width: 640px) {
+      .feature-card__content { align-items: flex-start; text-align: left; }
+    }
+    .feature-card__icon-wrap {
+      display: flex; align-items: center; justify-content: center;
+      width: 40px; height: 40px; border-radius: 0.5rem;
+      background: var(--primary-light); color: var(--primary);
+      transition: background 0.3s;
+    }
+    .feature-card:hover .feature-card__icon-wrap { background: rgba(217,70,168,0.20); }
+    .feature-card__icon { width: 20px; height: 20px; }
+    .feature-card__title { font-size: 0.875rem; font-weight: 600; }
+    .feature-card__desc {
+      margin-top: 0.125rem; font-size: 0.75rem;
+      line-height: 1.5; color: var(--muted); display: none;
+    }
+    @media (min-width: 640px) { .feature-card__desc { display: block; } }
+
+    /* --- Footer --- */
+    .footer { margin-top: 4rem; text-align: center; }
+    .footer__line {
+      height: 1px; width: 100%;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+    }
+    .footer__text { margin-top: 1.5rem; font-size: 0.75rem; color: var(--muted); }
+    .footer__sub { margin-top: 0.25rem; font-size: 0.75rem; color: rgba(110,95,138,0.5); }
+
+    /* --- Utility --- */
+    .hidden { display: none !important; }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border-width: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== Animated Background ===== -->
+  <div class="bg-layer" aria-hidden="true">
+    <div class="bg-orb bg-orb--primary"></div>
+    <div class="bg-orb bg-orb--accent"></div>
+    <div class="bg-orb bg-orb--center"></div>
+    <div class="bg-grid"></div>
+  </div>
+
+  <!-- ===== Header ===== -->
+  <header class="header glass-strong">
+    <div class="header__inner">
+      <div class="header__brand">
+        <svg class="header__disc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/>
+          <path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 2a10 10 0 0 0-10 10"/>
+        </svg>
+        <nav class="header__name">AudioInsight</nav>
+      </div>
+      <!-- <nav class="header__nav" aria-label="Main navigation">
+        <span class="header__nav-link">Classify</span>
+        <span class="header__nav-link">About</span>
+      </nav> -->
+      <div class="header__status">
+        <div class="header__dot"></div>
+        <span class="header__status-text">Model Active</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== Main Content ===== -->
+  <main class="main">
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="anim-fiu">
+        <div class="hero__badge">
+          <span class="hero__badge-dot"></span>
+          Powered by Machine Learning
+        </div>
+      </div>
+      <h1 class="hero__title anim-fiu d100">
+        Music Genre
+        <span class="hero__title-accent">Classification</span>
+      </h1>
+      <p class="hero__desc anim-fiu d200">
+        Upload your audio track and let our AI instantly identify its genre
+        using advanced deep learning.
+      </p>
+    </section>
+
+    <!-- Waveform Visualizer -->
+    <div id="waveform" class="waveform anim-fiu d200" aria-hidden="true"></div>
+
+    <!-- Upload Zone -->
+    <div id="upload-section" class="anim-fiu d300">
+      <button type="button" id="upload-btn" class="upload-zone" aria-label="Upload audio file">
+        <div class="upload-zone__content">
+          <div class="upload-zone__icon-wrap">
+            <svg class="upload-zone__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <div>
+            <p class="upload-zone__text">Drop your audio file here</p>
+            <p class="upload-zone__subtext">or click to browse &mdash; supports .wav files</p>
+          </div>
+        </div>
+      </button>
+    </div>
+
+    <!-- File Info -->
+    <div id="file-info-section" class="hidden">
+      <div class="glass file-info anim-fi">
+        <div class="file-info__icon-wrap">
+          <svg class="file-info__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+          </svg>
+        </div>
+        <div class="file-info__details">
+          <p id="file-name" class="file-info__name"></p>
+          <p id="file-size" class="file-info__size"></p>
+        </div>
+        <button id="remove-file-btn" class="file-info__remove" type="button" aria-label="Remove file">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Hidden file input -->
+    <input type="file" id="file-input" accept=".wav" class="sr-only" />
+
+    <!-- Action Buttons -->
+    <div class="action-wrap anim-fiu d400">
+      <button id="predict-btn" class="btn btn--primary" disabled>
+        <span class="btn__shine"></span>
+        <span id="predict-text">Predict Genre</span>
+        <svg class="btn__icon btn__icon--arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+        </svg>
+      </button>
+      <button id="reset-btn" class="btn btn--secondary hidden">
+        <svg class="btn__icon btn__icon--rotate" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+        </svg>
+        Classify Another
+      </button>
+    </div>
+
+    <!-- Error -->
+    <div id="error-msg" class="error-msg hidden"></div>
+
+    <!-- Genre Result -->
+    <div id="result-section" class="result hidden">
+      <div class="glass result__inner">
+        <!-- Loading -->
+        <div id="result-loading" class="result__loading hidden">
+          <div class="result__disc-wrap">
+            <svg class="result__disc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/>
+              <path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 2a10 10 0 0 0-10 10"/>
+            </svg>
+            <div class="result__disc-dot"><span></span></div>
+          </div>
+          <div>
+            <p class="result__loading-title">Analyzing audio...</p>
+            <p class="result__loading-sub">Our AI is classifying your music</p>
+          </div>
+          <div class="result__bar-track">
+            <div class="result__bar-fill"></div>
+          </div>
+        </div>
+        <!-- Success -->
+        <div id="result-success" class="result__success hidden">
+          <div id="result-icon-wrap" class="result__genre-icon-wrap">
+            <svg id="result-icon" class="result__genre-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+            </svg>
+          </div>
+          <div>
+            <p class="result__label">Predicted Genre</p>
+            <p id="result-genre-name" class="result__genre-name"></p>
+          </div>
+          <div id="result-tag" class="result__tag">
+            <span id="result-tag-dot" class="result__tag-dot"></span>
+            AI Classification Complete
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature Cards -->
+    <section class="features anim-fiu d600" aria-label="Features">
+      <div class="glass feature-card">
+        <div class="feature-card__content">
+          <div class="feature-card__icon-wrap">
+            <svg class="feature-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2a8 8 0 0 0-8 8c0 3.4 2.1 6.3 5 7.5V20h6v-2.5c2.9-1.2 5-4.1 5-7.5a8 8 0 0 0-8-8z"/>
+              <line x1="9" y1="22" x2="15" y2="22"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="feature-card__title">AI-Powered</h3>
+            <p class="feature-card__desc">Deep learning model trained on thousands of tracks</p>
+          </div>
+        </div>
+      </div>
+      <div class="glass feature-card">
+        <div class="feature-card__content">
+          <div class="feature-card__icon-wrap">
+            <svg class="feature-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 12h2l3-9 4 18 4-18 3 9h2"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="feature-card__title">Audio Analysis</h3>
+            <p class="feature-card__desc">Analyzes frequency, tempo, and tonal patterns</p>
+          </div>
+        </div>
+      </div>
+      <div class="glass feature-card">
+        <div class="feature-card__content">
+          <div class="feature-card__icon-wrap">
+            <svg class="feature-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="feature-card__title">5+ Genres</h3>
+            <p class="feature-card__desc">Rock, Pop, Jazz, Classical, Hip Hop, and more</p>
+          </div>
+        </div>
+      </div>
+      <div class="glass feature-card">
+        <div class="feature-card__content">
+          <div class="feature-card__icon-wrap">
+            <svg class="feature-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3l1.5 4.5H18l-3.5 2.5L16 14.5 12 11.5 8 14.5 9.5 10 6 7.5h4.5z"/>
+              <path d="M5 19h14"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="feature-card__title">Instant Results</h3>
+            <p class="feature-card__desc">Get your genre prediction in seconds</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer anim-fiu d700">
+      <div class="footer__line"></div>
+      <p class="footer__text">AudioInsight uses deep learning to analyze audio features and classify music genres.</p>
+      <p class="footer__sub">Built with Flask &amp; Python</p>
+    </footer>
+
+  </main>
+
+  <!-- ===== JavaScript (inlined) ===== -->
+  <script>
+    // ================================================================
+    // AudioInsight - Application Logic
+    // ================================================================
+
+    // --- State ---
+    let selectedFile = null;
+    let isLoading = false;
+    let genre = null;
+
+    // --- DOM Elements ---
+    const fileInput        = document.getElementById('file-input');
+    const uploadBtn        = document.getElementById('upload-btn');
+    const uploadSection    = document.getElementById('upload-section');
+    const fileInfoSection  = document.getElementById('file-info-section');
+    const fileNameEl       = document.getElementById('file-name');
+    const fileSizeEl       = document.getElementById('file-size');
+    const removeFileBtn    = document.getElementById('remove-file-btn');
+    const predictBtn       = document.getElementById('predict-btn');
+    const predictText      = document.getElementById('predict-text');
+    const resetBtn         = document.getElementById('reset-btn');
+    const errorMsg         = document.getElementById('error-msg');
+    const resultSection    = document.getElementById('result-section');
+    const resultLoading    = document.getElementById('result-loading');
+    const resultSuccess    = document.getElementById('result-success');
+    const resultGenreName  = document.getElementById('result-genre-name');
+    const resultIconWrap   = document.getElementById('result-icon-wrap');
+    const resultIcon       = document.getElementById('result-icon');
+    const resultTag        = document.getElementById('result-tag');
+    const resultTagDot     = document.getElementById('result-tag-dot');
+    const waveformEl       = document.getElementById('waveform');
+
+    // --- Genre Color Map ---
+    const genreColors = {
+      rock:      '#d94444',
+      pop:       '#d946a8',
+      jazz:      '#c9a227',
+      classical: '#7c5ebf',
+      'hip hop': '#d97a20',
+      hiphop:    '#d97a20',
+      country:   '#7abf3b',
+      blues:     '#3b7abf',
+      metal:     '#6b6b6b',
+      reggae:    '#2ebd6e',
+      disco:     '#c94bd1',
+    };
+
+    // --- Waveform ---
+    (function initWaveform() {
+      const BAR_COUNT = 60;
+      for (let i = 0; i < BAR_COUNT; i++) {
+        const bar = document.createElement('div');
+        bar.className = 'waveform__bar';
+        bar.style.height = (Math.sin(i * 0.3) * 20 + 25) + '%';
+        waveformEl.appendChild(bar);
+      }
+    })();
+
+    let waveformIntervals = [];
+
+    function startWaveformAnimation() {
+      waveformEl.classList.add('waveform--active');
+      waveformEl.querySelectorAll('.waveform__bar').forEach(function (bar) {
+        const id = setInterval(function () {
+          bar.style.height = (Math.random() * 80 + 20) + '%';
+        }, 100 + Math.random() * 200);
+        waveformIntervals.push(id);
+      });
+    }
+
+    function stopWaveformAnimation() {
+      waveformEl.classList.remove('waveform--active');
+      waveformIntervals.forEach(clearInterval);
+      waveformIntervals = [];
+      waveformEl.querySelectorAll('.waveform__bar').forEach(function (bar, i) {
+        bar.style.height = (Math.sin(i * 0.3) * 20 + 25) + '%';
+      });
+    }
+
+    // --- Helpers ---
+    function formatFileSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function showFileInfo(file) {
+      uploadSection.classList.add('hidden');
+      fileInfoSection.classList.remove('hidden');
+      fileNameEl.textContent = file.name;
+      fileSizeEl.textContent = formatFileSize(file.size);
+      predictBtn.disabled = false;
+    }
+
+    function hideFileInfo() {
+      uploadSection.classList.remove('hidden');
+      fileInfoSection.classList.add('hidden');
+      predictBtn.disabled = true;
+    }
+
+    function showError(msg) {
+      errorMsg.textContent = msg;
+      errorMsg.classList.remove('hidden');
+    }
+
+    function hideError() { errorMsg.classList.add('hidden'); }
+
+    function showLoading() {
+      resultSection.classList.remove('hidden');
+      resultLoading.classList.remove('hidden');
+      resultSuccess.classList.add('hidden');
+      predictText.textContent = 'Analyzing...';
+      predictBtn.disabled = true;
+      startWaveformAnimation();
+    }
+
+    function hideLoading() {
+      resultLoading.classList.add('hidden');
+      stopWaveformAnimation();
+    }
+
+    function showGenre(genreName) {
+      hideLoading();
+      var key = genreName.toLowerCase().replace(/\s/g, '');
+      var color = genreColors[key] || genreColors[genreName.toLowerCase()] || '#d946a8';
+
+      resultSection.classList.remove('hidden');
+      resultSuccess.classList.remove('hidden');
+      resultGenreName.textContent = genreName;
+      resultGenreName.style.color = color;
+      resultIconWrap.style.background = color + '20';
+      resultIcon.style.color = color;
+      resultTag.style.background = color + '15';
+      resultTag.style.color = color;
+      resultTag.style.border = '1px solid ' + color + '30';
+      resultTagDot.style.background = color;
+
+      predictBtn.classList.add('hidden');
+      resetBtn.classList.remove('hidden');
+    }
+
+    function resetAll() {
+      selectedFile = null;
+      genre = null;
+      isLoading = false;
+      fileInput.value = '';
+      hideFileInfo();
+      hideError();
+      hideLoading();
+      resultSection.classList.add('hidden');
+      resultSuccess.classList.add('hidden');
+      predictBtn.classList.remove('hidden');
+      predictBtn.disabled = true;
+      predictText.textContent = 'Predict Genre';
+      resetBtn.classList.add('hidden');
+    }
+
+    // --- Events ---
+    uploadBtn.addEventListener('click', function () { fileInput.click(); });
+
+    uploadBtn.addEventListener('dragover', function (e) {
+      e.preventDefault(); uploadBtn.classList.add('upload-zone--dragging');
+    });
+    uploadBtn.addEventListener('dragleave', function (e) {
+      e.preventDefault(); uploadBtn.classList.remove('upload-zone--dragging');
+    });
+    uploadBtn.addEventListener('drop', function (e) {
+      e.preventDefault(); uploadBtn.classList.remove('upload-zone--dragging');
+      var file = e.dataTransfer.files[0];
+      if (file && file.name.endsWith('.wav')) {
+        selectedFile = file; hideError(); genre = null; showFileInfo(file);
+      }
+    });
+
+    fileInput.addEventListener('change', function () {
+      var file = fileInput.files[0];
+      if (file) { selectedFile = file; hideError(); genre = null; showFileInfo(file); }
+    });
+
+    removeFileBtn.addEventListener('click', function () { resetAll(); });
+
+    predictBtn.addEventListener('click', function () {
+      if (!selectedFile || isLoading) return;
+      isLoading = true;
+      hideError();
+      showLoading();
+
+      var formData = new FormData();
+      formData.append('file', selectedFile);
+
+      fetch('http://127.0.0.1:5000/predict', {
+        method: 'POST',
+        body: formData,
+      })
+        .then(function (response) {
+          if (!response.ok) throw new Error('Prediction failed. Please try again.');
+          return response.json();
+        })
+        .then(function (result) {
+          genre = result.genre;
+          showGenre(genre);
+        })
+        .catch(function (err) {
+          hideLoading();
+          resultSection.classList.add('hidden');
+          showError(err.message || 'Something went wrong');
+          predictText.textContent = 'Predict Genre';
+          predictBtn.disabled = false;
+        })
+        .finally(function () {
+          isLoading = false;
+        });
+    });
+
+    resetBtn.addEventListener('click', function () { resetAll(); });
+  </script>
+</body>
+</html>
