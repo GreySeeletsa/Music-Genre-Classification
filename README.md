@@ -1,7 +1,7 @@
 # AudioInsight - AI Music Genre Classification
 
 <p align="center">
-  <img src="assets/screenshots/landing.png" alt="AudioInsight Landing Page" width="800"/>
+  <img src="assets/screenshots/landing.JPG" alt="AudioInsight Landing Page" width="800"/>
   <br/>
   <em>Figure 1: AudioInsight web interface with modern design</em>
 </p>
@@ -192,8 +192,8 @@ json
 ## Screenshots
 
 <p float="left">
-  <img src="assets/screenshots/landing.jpg" width="48%" alt="Landing page" />
-  <img src="assets/screenshots/upload.jpg" width="48%" alt="Upload and predict" />
+  <img src="assets/screenshots/uploaded.JPG" width="48%" alt="Uploading page" />
+  <img src="assets/screenshots/predict.JPG" width="48%" alt="Predict page" />
 </p>
 <p><em>Left: Landing page with upload zone. Right: Uploaded file and prediction results.</em></p>
 
